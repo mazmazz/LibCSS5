@@ -88,19 +88,20 @@ int OnInit()
     }
    
     IndicatorSetInteger(INDICATOR_DIGITS, 5);
-   
+    
+    string symbolsToWeigh = "";
     CssInst.calcMethod = CalcMethod == CSS_INPUT_SUPERSLOPE ? CSS_VERSION_SUPERSLOPE : CSS_VERSION_CSS;
-    if(UseAllSymbols || CalcMethod == CSS_INPUT_SUPERSLOPE) { CssInst.symbolsToWeigh = ""; } 
+    if(UseAllSymbols || CalcMethod == CSS_INPUT_SUPERSLOPE) { symbolsToWeigh = ""; } 
     else {
         switch(CssWeighList) {
-            case CSS_VERSION_3_8: CssInst.symbolsToWeigh = css3_SymbolsToWeigh; break;
-            case CSS_VERSION_CSS: default: CssInst.symbolsToWeigh = lib_SymbolsToWeigh; break;
+            case CSS_VERSION_3_8: symbolsToWeigh = css3_SymbolsToWeigh; break;
+            case CSS_VERSION_CSS: default: symbolsToWeigh = lib_SymbolsToWeigh; break;
         }
     }
-    CssInst.useOnlySymbolOnChart = UseOnlySymbolOnChart;
-    CssInst.doNotCache = DoNotCache;
+    CssInst.useOnlySymbolOnChart = UseOnlySymbolOnChart || CalcMethod == CSS_INPUT_SUPERSLOPE;
+    CssInst.setPeriods(MaPeriod, AtrPeriod);
     
-    CssInst.init();
+    CssInst.initSymbols(symbolsToWeigh);
     
     int size = ArraySize(CssInst.symbolNames);
     string debugList = "Symbols (" + size + "): ";
@@ -139,12 +140,8 @@ int OnCalculate(const int rates_total,
     startBar = startBar < 0 ? 0 : startBar;
 
     for(int i=startBar; i < windowBars + startBar; i++) {
-        double symbolCss = CssInst.getCSSCurrency(SymbolCur, BaseCur, TimeFrameCur, MaPeriod, AtrPeriod, i);
-        double quoteCss = CssInst.getCSSCurrency(SymbolCur, QuoteCur, TimeFrameCur, MaPeriod, AtrPeriod, i);
-        
-        //if(symbolCss != 0 || quoteCss != 0) {
-        //    Print("CSS values are nonzero");
-        //}
+        double symbolCss = CssInst.getCSSCurrency(SymbolCur, BaseCur, TimeFrameCur, i);
+        double quoteCss = CssInst.getCSSCurrency(SymbolCur, QuoteCur, TimeFrameCur, i);
         
         BaseBuffer[i]= symbolCss;
         QuoteBuffer[i]=quoteCss;
