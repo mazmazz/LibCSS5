@@ -22,6 +22,13 @@
 #property indicator_color2  clrTurquoise
 #property indicator_style2  STYLE_SOLID
 #property indicator_width2  2
+//--- plot GMT
+#property indicator_label3  "GMT"
+#property indicator_type3   DRAW_LINE
+#property indicator_color3  clrLimeGreen
+#property indicator_style3  STYLE_DOT
+#property indicator_width3  2
+
 
 #include <LibCSS5.mqh>
 
@@ -46,6 +53,7 @@ input double LevelCrossValue = 2.0; // LevelCrossValue: CSS=0.2, SuperSlope=2.0
 input double DifferenceThreshold = 0.0;
 input bool DisplayLevelCross = true;
 input bool DisplaySignalLines = true;
+input bool DisplayGmt = false;
 
 string css3_SymbolsToWeigh = "AUDCAD,AUDCHF,AUDJPY,AUDNZD,AUDUSD,CADJPY,CHFJPY,EURAUD,EURCAD,EURJPY,EURNZD,EURUSD,GBPAUD,GBPCAD,GBPCHF,GBPJPY,GBPNZD,GBPUSD,NZDCHF,NZDJPY,NZDUSD,USDCAD,USDCHF,USDJPY";
 string lib_SymbolsToWeigh = "GBPNZD,EURNZD,GBPAUD,GBPCAD,GBPJPY,GBPCHF,CADJPY,EURCAD,EURAUD,USDCHF,GBPUSD,EURJPY,NZDJPY,AUDCHF,AUDJPY,USDJPY,EURUSD,NZDCHF,CADCHF,AUDNZD,NZDUSD,CHFJPY,AUDCAD,USDCAD,NZDCAD,AUDUSD,EURCHF,EURGBP";
@@ -58,6 +66,7 @@ ENUM_TIMEFRAMES TimeFrameCur;
 //--- indicator buffers
 double         BaseBuffer[];
 double         QuoteBuffer[];
+double         GmtBuffer[];
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |
 //+------------------------------------------------------------------+
@@ -73,6 +82,10 @@ int OnInit()
     SetIndexBuffer(1,QuoteBuffer);
     ArraySetAsSeries(BaseBuffer, true);
     ArraySetAsSeries(QuoteBuffer, true);
+    if(DisplayGmt) {
+        SetIndexBuffer(2,GmtBuffer);
+        ArraySetAsSeries(GmtBuffer, true);
+    }
    
    // display LevelCrossValue
     if(DisplayLevelCross) {
@@ -87,7 +100,7 @@ int OnInit()
        IndicatorSetInteger(INDICATOR_LEVELWIDTH, 1, 1);
     }
    
-    IndicatorSetInteger(INDICATOR_DIGITS, 5);
+    IndicatorSetInteger(INDICATOR_DIGITS, 4);
     
     string symbolsToWeigh = "";
     CssInst.calcMethod = CalcMethod == CSS_INPUT_SUPERSLOPE ? CSS_VERSION_SUPERSLOPE : CSS_VERSION_CSS;
@@ -145,6 +158,11 @@ int OnCalculate(const int rates_total,
         
         BaseBuffer[i]= symbolCss;
         QuoteBuffer[i]=quoteCss;
+        
+        if(DisplayGmt) {
+            double gmtCss = CssInst.getGlobalMarketTrend(SymbolCur, TimeFrameCur, i);
+            GmtBuffer[i]=gmtCss;
+        }
     }
 //--- return value of prev_calculated for next call
     return(rates_total);
